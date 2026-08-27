@@ -1,0 +1,4 @@
+include LICENSE
+include MODEL_LICENSE.md
+include THIRD_PARTY_NOTICES.md
+recursive-include abot_recon/modeling/pi3/models/curope *.cpp *.cu setup.py

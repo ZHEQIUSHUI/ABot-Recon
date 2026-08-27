@@ -1,0 +1,40 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "abot-recon"
+version = "0.1.0"
+description = "Anchor-free streaming 3D reconstruction for long videos"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { file = "LICENSE" }
+classifiers = ["License :: OSI Approved :: Apache Software License"]
+dependencies = [
+  "einops>=0.7",
+  "huggingface-hub>=0.34,<1.0",
+  "numpy>=1.24",
+  "omegaconf>=2.3",
+  "pillow>=9.5",
+  "safetensors>=0.4",
+  "torch==2.5.1",
+  "torchvision==0.20.1",
+  "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+loop = ["faiss-cpu>=1.8", "opencv-python>=4.8", "pypose>=0.6", "scipy>=1.10"]
+dev = ["pytest>=8", "pytest-cov>=5", "ruff>=0.6"]
+
+[project.scripts]
+abot-recon = "abot_recon.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["abot_recon*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-ra"
+
+[tool.ruff]
+line-length = 100
