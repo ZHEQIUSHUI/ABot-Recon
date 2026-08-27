@@ -2,7 +2,7 @@
 
 # ABot-Recon
 
-### Revisiting Local Context for Long-Horizon Streaming 3D Reconstruction
+## Revisiting Local Context for Long-Horizon Streaming 3D Reconstruction
 
 [English](README.md) | [中文](README_ZH.md)
 
@@ -16,6 +16,10 @@
 [![License](https://img.shields.io/static/v1?label=License&message=Apache-2.0&color=438A68)](LICENSE)
 
 </div>
+
+<p align="center">
+  <img src="assets/teaser.png" width="85%" alt="ABot-Recon 长序列重建展示">
+</p>
 
 <!-- 请在正式发布前替换上方所有 TBD 链接。 -->
 
