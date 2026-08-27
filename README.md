@@ -12,7 +12,7 @@
 [![Code](https://img.shields.io/static/v1?label=Code&message=GitHub&color=333333&logo=github&logoColor=white)](https://github.com/amap-cvlab/ABot-Recon)
 [![Hugging Face](https://img.shields.io/static/v1?label=%F0%9F%A4%97%20Model&message=Hugging%20Face&color=7867A8)](https://huggingface.co/acvlab/ABot-Recon)
 [![ModelScope](https://img.shields.io/static/v1?label=%F0%9F%A4%96%20Model&message=ModelScope&color=5578B8)](https://modelscope.cn/models/amap_cvlab/ABot-Recon)
-[![Online Demo](https://img.shields.io/static/v1?label=%F0%9F%8C%90%20Online%20Demo&message=Coming%20Soon&color=328C8C)](TBD)
+[![Online Demo](https://img.shields.io/static/v1?label=%F0%9F%8C%90%20Online%20Demo&message=ModelScope&color=328C8C)](https://modelscope.cn/studios/amap_cvlab/ABot-Recon)
 [![License](https://img.shields.io/static/v1?label=License&message=Apache-2.0&color=438A68)](LICENSE)
 
 </div>
@@ -232,7 +232,8 @@ pytest -q tests/integration/test_real_checkpoint.py
 ```
 
 ## Release status
-- [ ] Training code and recipes
+
+- [ ] Training code and recipes (to be released by September 30)
 - [x] Public model checkpoint
 - [x] Inference and evaluation code
 
@@ -257,3 +258,7 @@ pytest -q tests/integration/test_real_checkpoint.py
 Source code is released under the [Apache License 2.0](LICENSE). Model weights are governed by [MODEL_LICENSE.md](MODEL_LICENSE.md), and third-party components are documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).
 
 ABot-Recon builds on Pi3 and draws inspiration from CroCo, DUSt3R, DINOv2, SALAD, FlashInfer, LingBot-Map, HorizonStream, and LongStream. We thank their authors and contributors.
+
+## Other Works from Our Group
+
+- [ABot-Earth](https://abot-earth.amap.com/)
