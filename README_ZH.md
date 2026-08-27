@@ -12,7 +12,7 @@
 [![Code](https://img.shields.io/static/v1?label=Code&message=GitHub&color=333333&logo=github&logoColor=white)](https://github.com/amap-cvlab/ABot-Recon)
 [![Hugging Face](https://img.shields.io/static/v1?label=%F0%9F%A4%97%20Model&message=Hugging%20Face&color=7867A8)](https://huggingface.co/acvlab/ABot-Recon)
 [![ModelScope](https://img.shields.io/static/v1?label=%F0%9F%A4%96%20Model&message=ModelScope&color=5578B8)](https://modelscope.cn/models/amap_cvlab/ABot-Recon)
-[![Online Demo](https://img.shields.io/static/v1?label=%F0%9F%8C%90%20Online%20Demo&message=Coming%20Soon&color=328C8C)](TBD)
+[![Online Demo](https://img.shields.io/static/v1?label=%F0%9F%8C%90%20Online%20Demo&message=ModelScope&color=328C8C)](https://modelscope.cn/studios/amap_cvlab/ABot-Recon)
 [![License](https://img.shields.io/static/v1?label=License&message=Apache-2.0&color=438A68)](LICENSE)
 
 </div>
@@ -131,8 +131,7 @@ local_points = result.local_points
 confidence = result.confidence
 ```
 
-权重只会下载一次，后续直接从 Hugging Face 缓存加载。离线推理时，将仓库 ID
-替换为本地权重路径即可。
+权重只会下载一次，后续直接从 Hugging Face 缓存加载。离线推理时，将仓库 ID 替换为本地权重路径即可。
 
 设置 `output_world_points=True` 可返回由最终轨迹变换后的世界坐标系点图；若仅需部分帧的稠密几何，可使用 `dense_output_indices`。
 
@@ -233,7 +232,7 @@ pytest -q tests/integration/test_real_checkpoint.py
 
 ## 发布状态
 
-- [ ] 训练代码与配置
+- [ ] 训练代码与配置（计划于 9 月 30 日前发布）
 - [x] 公开模型权重
 - [x] 推理与评测代码
 
@@ -258,3 +257,7 @@ pytest -q tests/integration/test_real_checkpoint.py
 源代码采用 [Apache License 2.0](LICENSE)。模型权重遵循 [MODEL_LICENSE.md](MODEL_LICENSE.md)，第三方组件及其许可证记录在 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
 ABot-Recon 基于 Pi3 构建，并参考了 CroCo、DUSt3R、DINOv2、SALAD、FlashInfer、LingBot-Map、HorizonStream 和 LongStream。感谢这些工作的作者与贡献者。
+
+## 我们组的其他工作
+
+- [ABot-Earth](https://abot-earth.amap.com/)
