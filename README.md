@@ -263,6 +263,8 @@ Source code is released under the [Apache License 2.0](LICENSE). Model weights a
 
 ABot-Recon builds on Pi3 and draws inspiration from CroCo, DUSt3R, DINOv2, SALAD, FlashInfer, LingBot-Map, HorizonStream, and LongStream. We thank their authors and contributors.
 
+We would also like to express our sincere gratitude to Zengye Ge, Hongyu Pan, Zhongxu Sun, Bentao Wang, Yuting Xu, Tianjian Ouyang, Haoming Yu, Chuzi Chen, and Zhiyang Zhang for their valuable support and contributions to this project.
+
 ## Other Works from Our Group
 
 - [ABot-Earth](https://abot-earth.amap.com/)
