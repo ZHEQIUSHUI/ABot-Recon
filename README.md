@@ -244,16 +244,14 @@ pytest -q tests/integration/test_real_checkpoint.py
 ## Citation
 
 ```bibtex
-@article{abot_recon2026,
-  title         = {Revisiting Local Context for Long-Horizon Streaming 3D Reconstruction},
-  author        = {{AMAP CV Lab}},
-  journal       = {arXiv preprint arXiv:TBD},
-  year          = {2026},
-  eprint        = {TBD},
-  archivePrefix = {arXiv},
-  primaryClass  = {cs.CV},
-  doi           = {TBD},
-  url           = {https://arxiv.org/abs/TBD}
+@misc{han2026revisitinglocalcontextlonghorizon,
+      title={Revisiting Local Context for Long-Horizon Streaming 3D Reconstruction}, 
+      author={Jiarong Han and Jincheng Xiong and Yuzhou Liu and Linzhe Shi and Changjie Wu and Ning Guo and Mu Xu and Hang Zhang and Ming Qian},
+      year={2026},
+      eprint={2608.27529},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2608.27529}, 
 }
 ```
 
