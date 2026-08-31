@@ -5,6 +5,7 @@ from safetensors.torch import save_file
 from torch import nn
 
 from abot_recon.checkpoint import (
+    RELEASE_CONFIG,
     RELEASE_CHECKPOINT,
     load_model_checkpoint,
     resolve_checkpoint,
@@ -60,11 +61,13 @@ def test_pretrained_resolver_keeps_local_checkpoint(tmp_path, monkeypatch):
 def test_pretrained_resolver_downloads_hugging_face_repo(tmp_path, monkeypatch):
     checkpoint = tmp_path / RELEASE_CHECKPOINT
     save_file({"weight": torch.ones(1)}, str(checkpoint))
-    received = {}
+    config = tmp_path / RELEASE_CONFIG
+    config.write_text("{}", encoding="utf-8")
+    received = []
 
     def fake_download(**kwargs):
-        received.update(kwargs)
-        return str(checkpoint)
+        received.append(kwargs)
+        return str(config if kwargs["filename"] == RELEASE_CONFIG else checkpoint)
 
     monkeypatch.setattr("huggingface_hub.hf_hub_download", fake_download)
     resolved = resolve_pretrained_checkpoint(
@@ -75,14 +78,17 @@ def test_pretrained_resolver_downloads_hugging_face_repo(tmp_path, monkeypatch):
         local_files_only=True,
     )
     assert resolved == checkpoint
-    assert received == {
+    common = {
         "repo_id": "acvlab/ABot-Recon",
-        "filename": RELEASE_CHECKPOINT,
         "cache_dir": str(tmp_path / "cache"),
         "revision": "release",
         "token": "test-token",
         "local_files_only": True,
     }
+    assert received == [
+        {**common, "filename": RELEASE_CONFIG},
+        {**common, "filename": RELEASE_CHECKPOINT},
+    ]
 
 
 def test_missing_local_checkpoint_is_not_treated_as_repo():

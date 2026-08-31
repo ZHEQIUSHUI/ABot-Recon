@@ -1,0 +1,10 @@
+{
+  "model_type": "abot_recon",
+  "architecture": "ABotRecon",
+  "checkpoint_file": "abot_recon.safetensors",
+  "input_height": 280,
+  "input_width": 504,
+  "local_window_frames": 12,
+  "amp_dtype": "bf16",
+  "attention_backend": "auto"
+}

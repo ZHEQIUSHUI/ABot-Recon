@@ -10,6 +10,7 @@ from torch import nn
 
 
 RELEASE_CHECKPOINT = "abot_recon.safetensors"
+RELEASE_CONFIG = "config.json"
 DEFAULT_MODEL_ID = "acvlab/ABot-Recon"
 SUPPORTED_SUFFIXES = {".safetensors", ".bin", ".pt", ".pth"}
 
@@ -54,13 +55,19 @@ def resolve_pretrained_checkpoint(
 
     from huggingface_hub import hf_hub_download
 
+    download_kwargs = {
+        "repo_id": source,
+        "cache_dir": str(cache_dir) if cache_dir is not None else None,
+        "revision": revision,
+        "token": token,
+        "local_files_only": local_files_only,
+    }
+    # Hugging Face counts downloads through designated query files such as
+    # config.json. Fetch it before the checkpoint without changing inference.
+    hf_hub_download(filename=RELEASE_CONFIG, **download_kwargs)
     downloaded = hf_hub_download(
-        repo_id=source,
         filename=filename,
-        cache_dir=str(cache_dir) if cache_dir is not None else None,
-        revision=revision,
-        token=token,
-        local_files_only=local_files_only,
+        **download_kwargs,
     )
     return resolve_checkpoint(downloaded)
 
