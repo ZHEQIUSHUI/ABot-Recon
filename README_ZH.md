@@ -6,7 +6,7 @@
 
 [English](README.md) | [中文](README_ZH.md)
 
-[![Arxiv](https://img.shields.io/static/v1?label=Paper&message=arXiv&color=5B6F9A&logo=arxiv&logoColor=white)](TBD)
+[![Arxiv](https://img.shields.io/static/v1?label=Paper&message=arXiv&color=5B6F9A&logo=arxiv&logoColor=white)](https://arxiv.org/abs/2608.27529)
 [![PDF](https://img.shields.io/static/v1?label=Paper&message=PDF&color=6A83A8&logo=adobeacrobatreader&logoColor=white)](https://github.com/amap-cvlab/ABot-Recon/blob/main/ABot-Recon-Tech-Report.pdf)
 [![Project](https://img.shields.io/static/v1?label=Project&message=Website&color=2F7F83&logo=googlechrome&logoColor=white)](https://amap-cvlab.github.io/ABot-Recon-html)
 [![Code](https://img.shields.io/static/v1?label=Code&message=GitHub&color=333333&logo=github&logoColor=white)](https://github.com/amap-cvlab/ABot-Recon)
@@ -20,8 +20,6 @@
 <p align="center">
   <img src="assets/teaser.png" width="85%" alt="ABot-Recon 长序列重建展示">
 </p>
-
-<!-- 请在正式发布前替换上方所有 TBD 链接。 -->
 
 > **一句话介绍：** ABot-Recon 仅使用固定的 12 帧局部上下文处理超长视频流，将当前帧几何与相邻帧相对位姿逐步组合为全局重建，无需持久化的学习式长程记忆。
 
@@ -246,13 +244,13 @@ pytest -q tests/integration/test_real_checkpoint.py
 @article{abot_recon2026,
   title         = {Revisiting Local Context for Long-Horizon Streaming 3D Reconstruction},
   author        = {{AMAP CV Lab}},
-  journal       = {arXiv preprint arXiv:TBD},
+  journal       = {arXiv preprint arXiv:2608.27529},
   year          = {2026},
-  eprint        = {TBD},
+  eprint        = {2608.27529},
   archivePrefix = {arXiv},
   primaryClass  = {cs.CV},
-  doi           = {TBD},
-  url           = {https://arxiv.org/abs/TBD}
+  doi           = {10.48550/arXiv.2608.27529},
+  url           = {https://arxiv.org/abs/2608.27529}
 }
 ```
 
