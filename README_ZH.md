@@ -263,6 +263,8 @@ pytest -q tests/integration/test_real_checkpoint.py
 
 源代码采用 [Apache License 2.0](LICENSE)。模型权重遵循 [MODEL_LICENSE.md](MODEL_LICENSE.md)，第三方组件及其许可证记录在 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。
 
+使用模型前，请阅读[模型使用说明](MODEL_USAGE_GUIDELINES_ZH.md)。
+
 ABot-Recon 基于 Pi3 构建，并参考了 CroCo、DUSt3R、DINOv2、SALAD、FlashInfer、LingBot-Map、HorizonStream 和 LongStream。感谢这些工作的作者与贡献者。
 
 ## 我们组的其他工作
