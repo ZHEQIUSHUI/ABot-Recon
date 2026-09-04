@@ -152,7 +152,17 @@ class RoPE3D(nn.Module):
         f_start: int,
         f_end: Optional[int],
     ) -> torch.Tensor:
-        freqs_stored = self.freqs.to(device)
+        import os as _os
+        _real_mode = _os.environ.get("ABOT_EXPORT_REAL_ROPE", "0") == "1"
+        if _real_mode:
+            # ONNX export path: work on real ANGLES (precompute torch.angle(freqs) eagerly
+            # into _freqs_angle before export) and emit stacked (cos, sin) at the end —
+            # complex dtype never enters the graph; numerically identical.
+            if not hasattr(self, "_freqs_angle"):
+                self._freqs_angle = torch.angle(self.freqs).to(torch.float32)
+            freqs_stored = self._freqs_angle.to(device)
+        else:
+            freqs_stored = self.freqs.to(device)
         t_dim, h_dim, w_dim = self.fhw_dim
         freqs = freqs_stored.split_with_sizes(
             [t_dim // 2, h_dim // 2, w_dim // 2],
@@ -194,18 +204,29 @@ class RoPE3D(nn.Module):
 
             out = torch.cat([freqs_special, freqs_patches], dim=1)
             out = out.reshape(ppf * (patch_start_idx + pph * ppw), -1)
-            return out.unsqueeze(0).unsqueeze(0)
+            out = out.unsqueeze(0).unsqueeze(0)
+            if _real_mode:
+                out = torch.stack([out.cos(), out.sin()], dim=-1)
+            return out
 
         freqs_f = freqs[0][frame_slice].reshape(ppf, 1, 1, -1).expand(ppf, pph, ppw, -1)
         freqs_h = freqs[1][:pph].reshape(1, pph, 1, -1).expand(ppf, pph, ppw, -1)
         freqs_w = freqs[2][:ppw].reshape(1, 1, ppw, -1).expand(ppf, pph, ppw, -1)
         out = torch.cat([freqs_f, freqs_h, freqs_w], dim=-1).reshape(1, 1, ppf * pph * ppw, -1)
+        if _real_mode:
+            out = torch.stack([out.cos(), out.sin()], dim=-1)
         return out
 
 
 def apply_rotary_emb(x: torch.Tensor, freqs: torch.Tensor) -> torch.Tensor:
-    cos = freqs.real.to(x.dtype)
-    sin = freqs.imag.to(x.dtype)
+    if freqs.is_complex():
+        cos = freqs.real.to(x.dtype)
+        sin = freqs.imag.to(x.dtype)
+    else:
+        # real-packed form [..., half, 2] (ONNX export path: complex dtype unsupported);
+        # numerically identical — polar(1, θ) == (cos θ, sin θ).
+        cos = freqs[..., 0].to(x.dtype)
+        sin = freqs[..., 1].to(x.dtype)
     x1 = x[..., 0::2]
     x2 = x[..., 1::2]
     out1 = x1 * cos - x2 * sin

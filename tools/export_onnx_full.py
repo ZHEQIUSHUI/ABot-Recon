@@ -110,14 +110,59 @@ def main():
             m.interpolate_antialias = False
     _install_chunked_sdpa()
     _install_bias_memo()
+    # normalization moves to the runtime (graph input = normalized imgs); record the
+    # constants in a sidecar json the ORT runtime loads.
+    os.environ["ABOT_PRENORMALIZED"] = "1"
+    os.environ["ABOT_EXPORT_STATIC_ROPE"] = "1"
+    os.environ["ABOT_EXPORT_REAL_ROPE"] = "1"
+    if getattr(net, "rope3d_embed", None) is not None:
+        # precompute EAGERLY so torch.angle (complex op) never enters the export graph
+        net.rope3d_embed._freqs_angle = torch.angle(net.rope3d_embed.freqs).to(torch.float32)
+        print("rope3d angle buffer precomputed:", tuple(net.rope3d_embed._freqs_angle.shape), flush=True)
+    mean = net.image_mean.flatten().tolist()
+    std = net.image_std.flatten().tolist()
+    import json
+    json.dump({"image_mean": mean, "image_std": std, "N": N, "input": "prenormalized"},
+              open(OUT.replace(".onnx", ".json"), "w"), indent=1)
+    print("sidecar:", {"image_mean": mean, "image_std": std}, flush=True)
     w = ExportRecon(net).eval()
     x = torch.randn(1, N, 3, 280, 504)
     try:
         use_dynamo = os.environ.get("EXPORT_DYNAMO", "1") == "1"
         if use_dynamo:
-            torch.onnx.export(w, (x,), OUT, opset_version=17, input_names=["imgs"],
+            # two-step: torch.export first, then convert. The converter lowers some view ops
+            # to prims.* which have no builtin ONNX mapping — supply custom translations
+            # (both are pure Reshapes).
+            from onnxscript import opset18 as oop
+
+            def prims_collapse_view(x, start: int, end: int):
+                shape = oop.Shape(x)
+                pre = oop.Slice(shape, oop.Constant(value_ints=[0]),
+                                oop.Constant(value_ints=[int(start)]), oop.Constant(value_ints=[0]))
+                post = oop.Slice(shape, oop.Constant(value_ints=[int(end) + 1]),
+                                 oop.Constant(value_ints=[2 ** 31 - 1]), oop.Constant(value_ints=[0]))
+                new_shape = oop.Concat(pre, oop.Constant(value_ints=[-1]), post, axis=0)
+                return oop.Reshape(x, new_shape)
+
+            def prims_split_dim(x, dim: int, outer_length: int):
+                shape = oop.Shape(x)
+                pre = oop.Slice(shape, oop.Constant(value_ints=[0]),
+                                oop.Constant(value_ints=[int(dim)]), oop.Constant(value_ints=[0]))
+                post = oop.Slice(shape, oop.Constant(value_ints=[int(dim) + 1]),
+                                 oop.Constant(value_ints=[2 ** 31 - 1]), oop.Constant(value_ints=[0]))
+                mid = oop.Constant(value_ints=[int(outer_length), -1])
+                return oop.Reshape(x, oop.Concat(pre, mid, post, axis=0))
+
+            table = {
+                torch.ops.prims.collapse_view.default: prims_collapse_view,
+                torch.ops.prims.split_dim.default: prims_split_dim,
+            }
+            ep = torch.export.export(w, (x,))
+            print("torch.export OK; converting to ONNX ...", flush=True)
+            torch.onnx.export(ep, (x,), OUT, input_names=["imgs"],
                               output_names=["local_points", "conf", "raw_delta", "resid"],
-                              dynamo=True, external_data=True, optimize=True)
+                              dynamo=True, external_data=True, optimize=True,
+                              custom_translation_table=table)
         else:
             torch.onnx.export(w, (x,), OUT, opset_version=17, input_names=["imgs"],
                               output_names=["local_points", "conf", "raw_delta", "resid"],

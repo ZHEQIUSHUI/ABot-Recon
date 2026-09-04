@@ -80,14 +80,25 @@ def local_to_world(local_points: np.ndarray, poses: np.ndarray) -> np.ndarray:
 # ---------------- chunked ORT inference ----------------
 class OrtAbotRecon:
     def __init__(self, onnx_path: str, providers=None, warmup: int = 24):
-        import onnxruntime as ort
+        import onnxruntime as ort, json, os
         self.sess = ort.InferenceSession(onnx_path, providers=providers or ["CPUExecutionProvider"])
         self.N = int(self.sess.get_inputs()[0].shape[1])       # fixed window length
         self.warmup = min(int(warmup), self.N - 1)
+        # sidecar json: normalization constants (graph input is pre-normalized)
+        side = onnx_path.replace(".onnx", ".json")
+        if os.path.exists(side):
+            meta = json.load(open(side))
+            self.mean = np.asarray(meta["image_mean"], np.float32).reshape(1, 3, 1, 1)
+            self.std = np.asarray(meta["image_std"], np.float32).reshape(1, 3, 1, 1)
+        else:                                                  # ImageNet defaults
+            self.mean = np.asarray([0.485, 0.456, 0.406], np.float32).reshape(1, 3, 1, 1)
+            self.std = np.asarray([0.229, 0.224, 0.225], np.float32).reshape(1, 3, 1, 1)
+        self.input_name = self.sess.get_inputs()[0].name
 
     def _run(self, imgs: np.ndarray):
+        x = ((imgs - self.mean) / self.std).astype(np.float32)  # runtime-side normalization
         lp, cf, rd, rs = self.sess.run(["local_points", "conf", "raw_delta", "resid"],
-                                       {"imgs": imgs[None]})
+                                       {self.input_name: x[None]})
         return lp[0], cf[0], rd[0], rs[0]
 
     def infer(self, frames: list[np.ndarray], progress=None):

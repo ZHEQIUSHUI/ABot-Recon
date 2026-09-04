@@ -172,7 +172,16 @@ if RoPE2D is None:
                     f"RoPE2D (PyTorch fallback): positions length {positions.shape[1]} != "
                     f"token seq {tokens.shape[2]} — usually wrong xpos after checkpoint/reshape."
                 )
-            cos, sin = self.get_cos_sin(D, int(positions.max())+1, tokens.device, tokens.dtype)
+            # int(positions.max()) is data-dependent and breaks torch.export/ONNX; positions
+            # are the patch-grid coords so a static upper bound is exact for any fixed input
+            # size (<=64 covers 896px/14). Larger tables are indexed the same, so this is
+            # numerically identical.
+            import os as _os
+            if _os.environ.get("ABOT_EXPORT_STATIC_ROPE", "0") == "1":
+                _max_pos = 64
+            else:
+                _max_pos = int(positions.max()) + 1
+            cos, sin = self.get_cos_sin(D, _max_pos, tokens.device, tokens.dtype)
             # split features into two along the feature dimension, and apply rope1d on each half
             y, x = tokens.chunk(2, dim=-1)
             y = self.apply_rope1d(y, positions[:,:,0], cos, sin)

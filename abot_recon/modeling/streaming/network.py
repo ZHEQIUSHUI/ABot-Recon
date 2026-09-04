@@ -610,7 +610,10 @@ class ABotReconNetwork(Pi3):
         if causal_global_attn is None:
             causal_global_attn = self.causal_global_attn
 
-        imgs = (imgs - self.image_mean) / self.image_std
+        # ONNX export path: normalization moves to the (numpy) runtime — dynamo decomposes
+        # this buffer broadcast to prims.broadcast_in_dim which has no ONNX mapping.
+        if os.environ.get("ABOT_PRENORMALIZED", "0") != "1":
+            imgs = (imgs - self.image_mean) / self.image_std
 
         B, N, _, H, W = imgs.shape
         if long_sequence_parallel:
