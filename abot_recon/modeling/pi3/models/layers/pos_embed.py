@@ -191,6 +191,9 @@ class PositionGetter(object):
         if (h,w) not in self.cache_positions:
             x = torch.arange(w, device=device)
             y = torch.arange(h, device=device)
-            self.cache_positions[h,w] = torch.cartesian_prod(y, x) # (h, w, 2)
+            # meshgrid+stack instead of torch.cartesian_prod (ONNX opset<=17 can't export
+            # cartesian_prod); numerically identical (h*w, 2) grid of (y, x) coords.
+            yy, xx = torch.meshgrid(y, x, indexing="ij")
+            self.cache_positions[h,w] = torch.stack([yy.reshape(-1), xx.reshape(-1)], dim=1)
         pos = self.cache_positions[h,w].view(1, h*w, 2).expand(b, -1, 2).clone()
         return pos
