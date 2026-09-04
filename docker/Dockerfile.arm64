@@ -21,9 +21,10 @@ RUN pip3 install torch==2.9.1 torchvision==0.24.1 --index-url https://download.p
 COPY docker/requirements.arm64.txt /app/docker/requirements.arm64.txt
 RUN pip3 install -r /app/docker/requirements.arm64.txt
 
-# the ABot-Recon package itself — installed WITHOUT deps to keep our torch 2.9.1+cu130
+# the ABot-Recon package itself — regular (non-editable) install WITHOUT deps, to keep our
+# torch 2.9.1+cu130. (-e needs the PEP 660 build_editable hook which the base pip lacks.)
 COPY . /app
-RUN pip3 install -e . --no-deps
+RUN pip3 install -U pip setuptools wheel && pip3 install . --no-deps
 
 EXPOSE 8000 8080
 ENTRYPOINT ["bash", "/app/docker/entrypoint.sh"]
