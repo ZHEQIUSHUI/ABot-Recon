@@ -6,7 +6,10 @@ FROM docker.m.daocloud.io/library/ubuntu:24.04
 
 ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 \
     PIP_BREAK_SYSTEM_PACKAGES=1
-RUN apt-get update && apt-get install -y --no-install-recommends \
+# ports.ubuntu.com 从 spark 拉取会挂死 → 换 aliyun 的 ubuntu-ports 镜像(24.04 deb822 格式)
+RUN sed -i 's|http://ports.ubuntu.com/ubuntu-ports|http://mirrors.aliyun.com/ubuntu-ports|g' \
+        /etc/apt/sources.list.d/ubuntu.sources && \
+    apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-pip libgl1 libglib2.0-0 ffmpeg ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
     && ln -sf /usr/bin/python3 /usr/local/bin/python
