@@ -81,7 +81,12 @@ def local_to_world(local_points: np.ndarray, poses: np.ndarray) -> np.ndarray:
 class OrtAbotRecon:
     def __init__(self, onnx_path: str, providers=None, warmup: int = 24):
         import onnxruntime as ort, json, os
-        self.sess = ort.InferenceSession(onnx_path, providers=providers or ["CPUExecutionProvider"])
+        so = ort.SessionOptions()
+        # CPU arena hoards freed blocks across the multi-GB attention transients of
+        # successive windows (fragmentation -> unbounded growth -> OOM). Disable by default;
+        # ORT then returns memory to the OS between nodes. ORT_ARENA=1 re-enables.
+        so.enable_cpu_mem_arena = os.environ.get("ORT_ARENA", "0") == "1"
+        self.sess = ort.InferenceSession(onnx_path, so, providers=providers or ["CPUExecutionProvider"])
         self.N = int(self.sess.get_inputs()[0].shape[1])       # fixed window length
         self.warmup = min(int(warmup), self.N - 1)
         # sidecar json: normalization constants (graph input is pre-normalized)
@@ -134,5 +139,7 @@ class OrtAbotRecon:
                     progress(e, T)
                 produced = e
         poses = compose_poses(rds, rss)
-        return {"camera_poses": poses, "local_points": lps, "conf": cfs[..., 0],
+        # graph emits conf LOGITS; api.infer applies sigmoid -> replicate (confidence in 0..1)
+        conf = 1.0 / (1.0 + np.exp(-cfs[..., 0].astype(np.float32)))
+        return {"camera_poses": poses, "local_points": lps, "conf": conf,
                 "raw_delta": rds, "resid": rss}
