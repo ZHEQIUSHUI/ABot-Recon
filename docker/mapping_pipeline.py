@@ -122,6 +122,18 @@ def run(video, out_dir, fps=8, ceiling_cut=False, ceiling_keep=0.85,
     if float(poses[:, :3, 1].mean(0) @ Bg[:, 2]) > 0:
         P[:, 1] *= -1; P[:, 2] *= -1; cams[:, 1] *= -1; cams[:, 2] *= -1
 
+    # drop far global-drift geometry: keep only points within the WALKED area (camera-trajectory
+    # xy bbox + margin). ABot's sequential composition can fling a chunk of geometry far from the
+    # path (no loop closure); without this the floorplan/3D frame around empty space. The camera
+    # path covers the real rooms, so bbox+margin keeps the rooms and cuts the drift.
+    if len(P):
+        cxy0, cxy1 = cams[:, :2].min(0), cams[:, :2].max(0)
+        mrg = 0.35 * float((cxy1 - cxy0).max()) + 1e-6
+        inb = ((P[:, 0] > cxy0[0] - mrg) & (P[:, 0] < cxy1[0] + mrg) &
+               (P[:, 1] > cxy0[1] - mrg) & (P[:, 1] < cxy1[1] + mrg))
+        meta["walked_area_kept"] = [int(inb.sum()), int(len(inb))]
+        P, C, T = P[inb], C[inb], T[inb]
+
     # optional ceiling removal: keep a fraction of the floor→ceiling span from the floor (+z up)
     if ceiling_cut and len(P):
         up_h = P[:, 2]; lo, hi = np.percentile(up_h, 1), np.percentile(up_h, 99)
