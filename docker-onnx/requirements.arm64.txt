@@ -3,10 +3,14 @@
 # 才能装 onnxruntime-gpu(aarch64 轮子只有新 Python)。CUDA EP 初始化失败自动回退 CPU EP。
 numpy==1.26.4
 onnxruntime-gpu==1.29.0
-nvidia-cudnn-cu12
-nvidia-cublas-cu12
-nvidia-cufft-cu12
-nvidia-curand-cu12
+# onnxruntime-gpu 1.29 aarch64 链接的是 CUDA 13 库(libcublasLt.so.13)→ 用 cu13 家族轮子
+nvidia-cublas
+nvidia-cudnn-cu13
+nvidia-cufft
+nvidia-curand
+nvidia-cuda-runtime
+nvidia-cuda-nvrtc
+nvidia-nvjitlink
 opencv-python-headless==4.10.0.84
 matplotlib==3.9.2
 pillow==10.4.0
