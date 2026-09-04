@@ -15,3 +15,7 @@ fastapi>=0.110
 uvicorn>=0.29
 viser==1.1.0
 python-multipart>=0.0.9
+# loop-closure extras (ABOT_LOOP=1): SALAD place-recognition + DINOv2 + pose-graph optimization
+faiss-cpu>=1.8
+pypose>=0.6
+scipy>=1.10

@@ -21,12 +21,25 @@ import os, sys, time, json, argparse, tempfile, shutil
 MODEL_ID = os.environ.get("ABOT_MODEL_ID", "acvlab/ABot-Recon")
 
 
+def loop_enabled():
+    return os.environ.get("ABOT_LOOP", "0") == "1"
+
+
 def load_ready_model(model_id=None, use_sdpa=True, device="cuda"):
     """Load ABot-Recon ready to infer. `model_id` is a HF repo id or a local checkpoint dir.
-    attention_backend='sdpa' (no flashinfer needed); loop_closure off (fewer deps)."""
+    attention_backend='sdpa' (no flashinfer needed). loop_closure gated on ABOT_LOOP=1 —
+    when on, it loads SALAD + DINOv2 (mounted at /app/loop-assets) for place-recognition +
+    pose-graph optimization to fix global drift on revisits."""
     from abot_recon import ABotRecon
-    return ABotRecon.from_pretrained(model_id or MODEL_ID, device=device,
-                                     attention_backend="sdpa", loop_closure=False)
+    kw = dict(device=device, attention_backend="sdpa")
+    if loop_enabled():
+        kw.update(loop_closure=True,
+                  loop_salad_checkpoint=os.environ.get("ABOT_LOOP_SALAD", "/app/loop-assets/dino_salad.ckpt"),
+                  loop_dino_checkpoint=os.environ.get("ABOT_LOOP_DINO", "/app/loop-assets/dinov2_vitb14_pretrain.pth"),
+                  loop_output_dir=os.environ.get("ABOT_LOOP_OUT", "/data/jobs/_loop"))
+    else:
+        kw.update(loop_closure=False)
+    return ABotRecon.from_pretrained(model_id or MODEL_ID, **kw)
 
 
 def _extract_frames(video, fps, out_dir):
@@ -82,9 +95,10 @@ def run(video, out_dir, fps=8, ceiling_cut=False, ceiling_keep=0.85,
             model = load_ready_model(model_id, True, device)
         t_inf = time.time()
         dense = list(range(len(frames)))
+        loop = loop_enabled()
         result = model.infer(frames, output_world_points=True, output_confidence=True,
-                             loop_closure=False, dense_output_indices=dense)
-        meta["infer_s"] = round(time.time() - t_inf, 1)
+                             loop_closure=loop, dense_output_indices=dense)
+        meta["infer_s"] = round(time.time() - t_inf, 1); meta["loop_closure"] = loop
 
         poses = result.camera_poses.detach().cpu().numpy().astype(np.float32)   # [N,4,4] c2w
         wp = result.world_points.detach().cpu().numpy()                          # [M,H,W,3] world
