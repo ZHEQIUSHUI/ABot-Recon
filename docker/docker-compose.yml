@@ -1,0 +1,29 @@
+# LingBot-Map 建图服务
+#   docker compose -f docker/docker-compose.yml up --build
+# 权重(lingbot-map.pt)与 MobileCLIP onnx 走挂载,不烤进镜像。
+services:
+  lingbot-map:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: lingbot-map:latest
+    ports:
+      - "8000:8000"   # 建图 API
+      - "8080:8080"   # viser 网页 3D 可视化
+    volumes:
+      - ../ckpt:/app/ckpt:ro              # 3 个 pt(lingbot-map / -long / -stage1)+ skyseg_batch.onnx
+      - ../models:/app/models:ro          # mobileclip_vision.onnx(地图编码,可选)
+      - ./data:/data/jobs                 # 产物持久化(重启后仍可回看)
+    environment:
+      MAP_FPS: "3"
+      MAP_USE_SDPA: "1"                   # 用 torch SDPA(默认;镜像不带 flashinfer)
+      MAP_IDLE_UNLOAD: "1800"            # 空闲 30 分自动卸载模型释放显存(热加载)
+      MAP_DEFAULT_MODEL: "lingbot-map"   # 默认选中的模型(网页可切换)
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    restart: unless-stopped

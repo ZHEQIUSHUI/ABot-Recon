@@ -1,0 +1,13 @@
+.git/
+.github/
+**/__pycache__/
+*.pyc
+*.egg-info/
+outputs/
+examples/
+docker/data/
+hf-cache/
+*.mp4
+*.mov
+*.MOV
+*.avi

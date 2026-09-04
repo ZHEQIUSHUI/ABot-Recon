@@ -1,0 +1,17 @@
+# arm64/GB10 stack for the ABot-Recon docker service. torch/torchvision are installed
+# separately (cu130 index) in the Dockerfile so this layer isn't re-fetched on dep changes.
+# open3d 0.18 is the last aarch64 build and needs numpy<2, so the whole stack is pinned to numpy 1.26.
+numpy==1.26.4
+open3d==0.18.0
+opencv-python-headless==4.10.0.84
+matplotlib==3.9.2
+pillow==10.4.0
+einops>=0.7
+omegaconf>=2.3
+safetensors>=0.4
+huggingface-hub>=0.34,<1.0
+tqdm>=4.66
+fastapi>=0.110
+uvicorn>=0.29
+viser==1.1.0
+python-multipart>=0.0.9

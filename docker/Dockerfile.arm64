@@ -1,0 +1,29 @@
+# ABot-Recon 建图服务镜像 (arm64 / NVIDIA GB10 DGX Spark, Blackwell sm_121).
+# GB10 需要 CUDA>=12.9,故用 torch 2.9.1+cu130(cu130 匹配驱动 + Blackwell)。ABot 上游
+# pin 的是 torch 2.5.1+cu121(x86/A100/H100),在 GB10 上跑不了;实测模型代码用的是标准
+# 算子,torch 2.8/2.9 都能跑,所以这里用 --no-deps 装 abot_recon,绕过它的 torch pin。
+# Docker Hub 被墙 → base 走 daocloud 镜像源。curope/flashinfer 都是可选,不编。
+FROM docker.m.daocloud.io/library/ubuntu:22.04
+
+ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 \
+    HF_HOME=/app/hf-cache PIP_NO_CACHE_DIR=1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3 python3-pip libgl1 libglib2.0-0 ffmpeg ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && ln -sf /usr/bin/python3 /usr/local/bin/python
+
+WORKDIR /app
+
+# torch/torchvision for GB10 (cu130). Big layer — kept separate so dep edits don't re-download it.
+RUN pip3 install torch==2.9.1 torchvision==0.24.1 --index-url https://download.pytorch.org/whl/cu130
+
+# service + abot deps (numpy<2 for open3d 0.18)
+COPY docker/requirements.arm64.txt /app/docker/requirements.arm64.txt
+RUN pip3 install -r /app/docker/requirements.arm64.txt
+
+# the ABot-Recon package itself — installed WITHOUT deps to keep our torch 2.9.1+cu130
+COPY . /app
+RUN pip3 install -e . --no-deps
+
+EXPOSE 8000 8080
+ENTRYPOINT ["bash", "/app/docker/entrypoint.sh"]
