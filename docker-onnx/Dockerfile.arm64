@@ -13,6 +13,10 @@ WORKDIR /app/docker-onnx
 COPY docker-onnx/requirements.arm64.txt /tmp/req.txt
 RUN pip3 install -r /tmp/req.txt
 
+# CUDA EP 找 cudnn/cublas:指向 pip 轮子的 lib 目录(容器由 --gpus all 注入驱动)
+ENV LD_LIBRARY_PATH=/usr/local/lib/python3.10/dist-packages/nvidia/cudnn/lib:/usr/local/lib/python3.10/dist-packages/nvidia/cublas/lib:/usr/local/lib/python3.10/dist-packages/nvidia/cufft/lib:/usr/local/lib/python3.10/dist-packages/nvidia/curand/lib
+ENV NVIDIA_VISIBLE_DEVICES=all NVIDIA_DRIVER_CAPABILITIES=compute,utility
+
 COPY docker-onnx/ /app/docker-onnx/
 
 EXPOSE 8000 8080
