@@ -1,0 +1,11 @@
+# torch-free ONNX 建图服务 (arm64/GB10)。open3d 0.18 是 aarch64 最后一版且要 numpy<2。
+numpy==1.26.4
+onnxruntime==1.19.2
+open3d==0.18.0
+opencv-python-headless==4.10.0.84
+matplotlib==3.9.2
+pillow==10.4.0
+fastapi>=0.110
+uvicorn>=0.29
+viser==1.1.0
+python-multipart>=0.0.9
