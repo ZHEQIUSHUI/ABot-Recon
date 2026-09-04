@@ -1,9 +1,12 @@
-# torch-free ONNX 建图服务 (arm64/GB10)。open3d 0.18 是 aarch64 最后一版且要 numpy<2。
-# onnxruntime-gpu 自带 CPU EP;CUDA EP 需要 cudnn/cublas(pip 轮子,LD_LIBRARY_PATH 见 Dockerfile),
-# GB10 sm_121 初始化失败时自动回退 CPU EP。
+# torch-free ONNX 建图服务 (arm64/GB10, py3.12)。
+# open3d 已用 numpy 替换(miniply.py:PLY 读写 + voxel 降采样)→ 摆脱 py<=3.11 pin,
+# 才能装 onnxruntime-gpu(aarch64 轮子只有新 Python)。CUDA EP 初始化失败自动回退 CPU EP。
 numpy==1.26.4
-onnxruntime==1.19.2
-open3d==0.18.0
+onnxruntime-gpu==1.29.0
+nvidia-cudnn-cu12
+nvidia-cublas-cu12
+nvidia-cufft-cu12
+nvidia-curand-cu12
 opencv-python-headless==4.10.0.84
 matplotlib==3.9.2
 pillow==10.4.0

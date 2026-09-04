@@ -347,7 +347,7 @@ def _redraw_cloud():
 
 
 def _load_viser_cloud(job_id):
-    import open3d as o3d
+    from miniply import read_ply                     # numpy-only PLY reader (no open3d)
     srv = _viser["server"]
     if srv is None:
         return
@@ -357,9 +357,8 @@ def _load_viser_cloud(job_id):
     ply = os.path.join(d, "cloud.ply")
     if not os.path.exists(ply):
         ply = os.path.join(d, "cloud_viz.ply")
-    pcd = o3d.io.read_point_cloud(ply)
-    pts = np.asarray(pcd.points, np.float32)
-    col = (np.clip(np.asarray(pcd.colors), 0, 1) * 255).astype(np.uint8)
+    pts, col01 = read_ply(ply)
+    col = (np.clip(col01, 0, 1) * 255).astype(np.uint8)
 
     # ABot mapping_pipeline already writes cloud.ply floor-aligned AND upright, and stores the
     # matching aligned camera centers as recon.npz["cams"] — so here we just load them (no flip,

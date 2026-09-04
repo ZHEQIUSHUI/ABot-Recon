@@ -1,9 +1,11 @@
 # ABot-Recon 建图服务 — torch-free ONNX 版 (arm64/GB10)。
-# 无 torch/无 CUDA 轮子:onnxruntime(CPU EP 起步,后续可换 TRT)+ numpy 位姿组合。
-# 镜像从 torch 版的 ~18GB 降到 ~2GB。Docker Hub 被墙 → daocloud 镜像源。
-FROM docker.m.daocloud.io/library/ubuntu:22.04
+# ubuntu 24.04 → Python 3.12:onnxruntime-gpu 的 aarch64 轮子只发新 Python(cp310 没有),
+# 这也是踢掉 open3d(仅有 py<=3.11 aarch64 轮)换 numpy 实现(miniply.py)的原因。
+# CUDA EP 库走 pip 的 cudnn/cublas 轮子;GB10 上初始化失败会自动回退 CPU EP。
+FROM docker.m.daocloud.io/library/ubuntu:24.04
 
-ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1
+ENV DEBIAN_FRONTEND=noninteractive PYTHONUNBUFFERED=1 PIP_NO_CACHE_DIR=1 \
+    PIP_BREAK_SYSTEM_PACKAGES=1
 RUN apt-get update && apt-get install -y --no-install-recommends \
     python3 python3-pip libgl1 libglib2.0-0 ffmpeg ca-certificates \
     && rm -rf /var/lib/apt/lists/* \
@@ -14,7 +16,7 @@ COPY docker-onnx/requirements.arm64.txt /tmp/req.txt
 RUN pip3 install -r /tmp/req.txt
 
 # CUDA EP 找 cudnn/cublas:指向 pip 轮子的 lib 目录(容器由 --gpus all 注入驱动)
-ENV LD_LIBRARY_PATH=/usr/local/lib/python3.10/dist-packages/nvidia/cudnn/lib:/usr/local/lib/python3.10/dist-packages/nvidia/cublas/lib:/usr/local/lib/python3.10/dist-packages/nvidia/cufft/lib:/usr/local/lib/python3.10/dist-packages/nvidia/curand/lib
+ENV LD_LIBRARY_PATH=/usr/local/lib/python3.12/dist-packages/nvidia/cudnn/lib:/usr/local/lib/python3.12/dist-packages/nvidia/cublas/lib:/usr/local/lib/python3.12/dist-packages/nvidia/cufft/lib:/usr/local/lib/python3.12/dist-packages/nvidia/curand/lib
 ENV NVIDIA_VISIBLE_DEVICES=all NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
 COPY docker-onnx/ /app/docker-onnx/

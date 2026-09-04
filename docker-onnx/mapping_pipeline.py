@@ -3,7 +3,7 @@
 
 与 docker/mapping_pipeline.py 同接口(service.py 零改动复用),但推理走导出的 ONNX 图
 (abot_recon_nXX.onnx,固定 N 滑窗)+ numpy 位姿组合,整条链路无 torch:
-  依赖仅 onnxruntime, numpy, opencv, PIL, open3d, matplotlib。
+  依赖仅 onnxruntime, numpy, opencv, PIL, matplotlib(open3d 已被 miniply.py numpy 实现替换)。
 数值上与 torch 版对齐(位姿/点图 cos≈1,warmup=24 滑窗 vs 全序列 0.15% 轨迹误差)。
 
 产物与 torch 版一致:recon.npz / cloud.ply / cloud_viz.ply / floorplan.png / view_*.png / meta.json
@@ -145,18 +145,14 @@ def run(video, out_dir, fps=8, ceiling_cut=False, ceiling_keep=0.85,
     tnorm = (T - T.min()) / max(1.0, float(T.max() - T.min()))
     Ctime = cm.turbo(tnorm)[:, :3].astype(np.float32)
 
-    import open3d as o3d
+    from miniply import write_ply, voxel_downsample          # numpy-only (no open3d)
     span = float((np.percentile(P, 99, 0) - np.percentile(P, 1, 0)).mean())
     vox = max(1e-3, span / 550)
-    def _cloud(colors, path):
-        p = o3d.geometry.PointCloud()
-        p.points = o3d.utility.Vector3dVector(P.astype(np.float64))
-        p.colors = o3d.utility.Vector3dVector(colors.astype(np.float64))
-        p = p.voxel_down_sample(voxel_size=vox)
-        o3d.io.write_point_cloud(path, p); return p
-    pcd = _cloud(C, os.path.join(out_dir, "cloud.ply"))
-    _cloud(Ctime, os.path.join(out_dir, "cloud_viz.ply"))
-    meta["cloud_points"] = len(pcd.points)
+    Pd, Cd = voxel_downsample(P, C, vox)
+    write_ply(os.path.join(out_dir, "cloud.ply"), Pd, Cd)
+    _, Ctd = voxel_downsample(P, Ctime, vox)
+    write_ply(os.path.join(out_dir, "cloud_viz.ply"), Pd, Ctd)
+    meta["cloud_points"] = len(Pd)
 
     _render(out_dir, P, C, Ctime, cams, meta)
 
