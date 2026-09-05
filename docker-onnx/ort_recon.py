@@ -86,7 +86,27 @@ class OrtAbotRecon:
         # successive windows (fragmentation -> unbounded growth -> OOM). Disable by default;
         # ORT then returns memory to the OS between nodes. ORT_ARENA=1 re-enables.
         so.enable_cpu_mem_arena = os.environ.get("ORT_ARENA", "0") == "1"
-        self.sess = ort.InferenceSession(onnx_path, so, providers=providers or ["CPUExecutionProvider"])
+        # CUDA EP: the extended-level BiasSoftmax fusion trips CUDNN_STATUS_NOT_SUPPORTED on
+        # our huge attention tensors -> BASIC skips that fusion (plain Add+Softmax kernels).
+        lvl = os.environ.get("ORT_OPT_LEVEL", "basic").lower()
+        so.graph_optimization_level = {
+            "disable": ort.GraphOptimizationLevel.ORT_DISABLE_ALL,
+            "basic": ort.GraphOptimizationLevel.ORT_ENABLE_BASIC,
+            "extended": ort.GraphOptimizationLevel.ORT_ENABLE_EXTENDED,
+            "all": ort.GraphOptimizationLevel.ORT_ENABLE_ALL,
+        }.get(lvl, ort.GraphOptimizationLevel.ORT_ENABLE_BASIC)
+        provs = list(providers or ["CPUExecutionProvider"])
+        # CUDA EP on unified-memory boxes (GB10): cap the arena and grow it exactly as
+        # requested — the default BFC greedy growth + decomposed-attention transients
+        # (6.4GB logits per chunk x 36 layers) OOMs the whole machine. HEURISTIC conv
+        # search avoids exhaustive-autotune workspace spikes.
+        cuda_opts = {
+            "gpu_mem_limit": str(int(float(os.environ.get("ORT_CUDA_MEM_GB", "64")) * (1 << 30))),
+            "arena_extend_strategy": "kSameAsRequested",
+            "cudnn_conv_algo_search": "HEURISTIC",
+        }
+        provs = [(pv, cuda_opts) if pv == "CUDAExecutionProvider" else pv for pv in provs]
+        self.sess = ort.InferenceSession(onnx_path, so, providers=provs)
         self.N = int(self.sess.get_inputs()[0].shape[1])       # fixed window length
         self.warmup = min(int(warmup), self.N - 1)
         # sidecar json: normalization constants (graph input is pre-normalized)
