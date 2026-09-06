@@ -16,7 +16,7 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 MODEL_ID = os.environ.get("ABOT_MODEL_ID", "/app/model/abot_recon.onnx")  # .onnx path
 ORT_PROVIDERS = [p for p in os.environ.get(
     "ORT_PROVIDERS", "CUDAExecutionProvider,CPUExecutionProvider").split(",") if p]
-WARMUP = int(os.environ.get("ABOT_WARMUP", "24"))
+WARMUP = int(os.environ.get("ABOT_WARMUP", "12"))   # N=15 图窗口 12 帧;CUDA EP 用
 
 
 def loop_enabled():

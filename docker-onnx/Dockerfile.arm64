@@ -22,6 +22,11 @@ RUN pip3 install -r /tmp/req.txt --extra-index-url https://pypi.nvidia.com
 ENV LD_LIBRARY_PATH=/usr/local/lib/python3.12/dist-packages/nvidia/cu13/lib:/usr/local/lib/python3.12/dist-packages/nvidia/cudnn/lib
 ENV NVIDIA_VISIBLE_DEVICES=all NVIDIA_DRIVER_CAPABILITIES=compute,utility
 
+# 自编译的原生 sm_121 onnxruntime-gpu wheel(官方 aarch64 轮子在 GB10 上要 JIT/不带 sm_121)
+COPY docker-onnx/wheels/ /wheels/
+RUN if ls /wheels/onnxruntime_gpu-*.whl >/dev/null 2>&1; then \
+      pip3 install --force-reinstall --no-deps /wheels/onnxruntime_gpu-*.whl ; fi
+
 COPY docker-onnx/ /app/docker-onnx/
 
 EXPOSE 8000 8080
